@@ -2,40 +2,50 @@ from enum import Enum, auto, unique
 
 
 @unique
-class MethodNameType(Enum):
-    AUTH = 'auth'
-    BAD_FORMAT = 'bad_format'
-    GETMSG = 'getmsg'
-    SENDMSG = 'sendmsg'
-
-
-@unique
 class MethodType(Enum):
-    AUTH = 10
-    BAD_FORMAT = 11
-    GETMSG = 20
-    SENDMSG = 30
+    RSS = 10
+    AUTH = 11
+    FIND = 20
+    GET = 21
+    CREATE = 30
+    JOIN = 40
 
 
 @unique
-class HeaderNameType(Enum):
-    PATH = 'path'
-    METHOD = 'method'
-    CODE = 'code'
-    TOKEN = '1'
-    LASTUPDATE = '2'
-    SENDMSG = '3'
+class MethodNameType(Enum):
+    RSS = 'resources'
+    AUTH = 'auth'
+    FIND = 'find'
+    GET = 'getmsg'
+    CREATE = 'create'
+    JOIN = 'join'
 
 
 @unique
 class HeaderType(Enum):
-    TOKEN = auto()
-    LASTUPDATE = auto()
-    SENDMSG = auto()
+    RESOURCE = 10
+    METHOD = 11
+    CODESTATUS = 12
+    TOKEN = 15
+    LASTUPDATE = 16
+
+
+@unique
+class HeaderNameType(Enum):
+    RESOURCE = 'rs'
+    METHOD = 'mt'
+    STATUSCODE = 'cs'
+    TOKEN = 'tK'
+    LASTUPDATE = 'LU'
+
+
+@unique
+class CodeNameType(Enum):
+    BAD = 'BAD_FORMAT'
+    UNAUTHORIZED = 'UNAUTHORIZED'
 
 
 @unique
 class CodeType(Enum):
-    LOGIN = auto()
-    GETMSG = auto()
-    SENDMSG = auto()
+    BAD = 10
+    UNAUTHORIZED = 11

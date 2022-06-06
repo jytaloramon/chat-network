@@ -4,46 +4,45 @@ from typing import Dict, List, Optional
 from protocol.protocoltypes import MethodType
 
 
-class RoutesBase:
+class Routes:
 
-    def __init__(self, base_path: str, routes: List = []) -> None:
+    def __init__(self, resource: int, label: str) -> None:
 
-        if not(base_path[0] == '/'):
-            raise Exception('path not init with "/"')
+        self._resource = resource
+        self._label = label
 
-        self._base_path = base_path
-        self._methods: Dict[int, Function] = {}
+    def get_resource(self) -> int:
+        return self._resource()
 
-    def get_base_path(self) -> str:
-        return self._base_path
-
-    def auth(self, func: Function = None):
-        pass
-
-    def getmsg(self, func: Function = None):
-        pass
-
-    def sendmsg(self, func: Function = None):
-        pass
-
-
-class Routes(RoutesBase):
-
-    def __init__(self, base_path: str, routes: List[RoutesBase] = []) -> None:
-
-        if not(base_path[0] == '/'):
-            raise Exception('path not init with "/"')
-
-        super().__init__(base_path, routes)
-
-        self._routes = Dict[str, routes] = dict(
-            [(r.get_base_path(), r)for r in routes])
+    def get_label(self) -> str:
+        return self._label
 
     def auth(self, func: Function = None):
         self._methods[MethodType.AUTH.value] = func
 
-    def getmsg(self):
-        pass
+    def find(self, func: Function = None):
+        self._methods[MethodType.FIND.value] = func
 
-    def sendmsg(self):
-        pass
+
+class RouterManager:
+
+    def __init__(self) -> None:
+
+        self._routes: Dict[int, Routes] = {}
+
+    def get_routes(self) -> Dict[int, Routes]:
+        return self._routes
+
+    def get_rss(self) -> Dict[int, Routes]->Dict[]:
+        return [f'{id} - {r.get_label()}'for id, r in self._routes]
+
+
+    def add_router(self, router: Routes):
+        if not(self._routes.get(router.get_resource()) is None):
+            raise Exception('Recurso com esse id já existe')
+
+        self._routes[router.get_resource()] = router
+
+    def get_routes_by_resource(self, id: int) -> Routes:
+        return self._routes[id]
+
