@@ -9,7 +9,9 @@ class Frame:
             'header': header, 'body': body}
 
     def get_data(self) -> dict[str, dict[str, any]]:
+
         return self._data
 
     def __str__(self) -> str:
+
         return json.dumps(self._data)

@@ -10,6 +10,8 @@ class ServerThreadPool:
         self._threads: List[Thread] = []
 
     def add(self, data: any, len_buffer: int):
+
         thread_task = Thread(target=self._task, args=(data, len_buffer))
         thread_task.start()
+        
         self._threads.append(thread_task)
