@@ -66,8 +66,10 @@ class Frame:
         return self._data.get('body')
 
     def __str__(self) -> str:
+        header = self.get_header().get_data()
+        body = self.get_body().get_data() if self.get_body().get_data() is not None else None
 
         return json.dumps({
-            'header': self.get_header().get_data(),
-            'body': self.get_body().get_data() if self.get_body().get_data() is not None else None
+            'header': header,
+            'body':  body
         })
