@@ -2,10 +2,11 @@ import json
 from socket import socket
 from typing import Dict, Tuple
 from framework.error import BadConstructionError, FunctionNotImplementedError
-from protocol.frame import Frame
+from protocol.frame import Frame, FrameBody, FrameHeader
 from protocol.protocoltypes import HeaderLabelType, SCodeType
 from framework.router import RouterManager
 from framework.serverthreadpool import ServerThreadPool
+from time import time_ns
 
 
 class ChatFramework:
@@ -43,15 +44,19 @@ class ChatFramework:
         try:
             res_fram: Frame = self._router_manager.solver(req_frame)
         except BadConstructionError as bc:
-            res_fram = Frame(
-                {HeaderLabelType.STATUSCODE.value: SCodeType.BADCONSTRUCTION.value},
-                {}
-            )
+            header_f = FrameHeader({
+                HeaderLabelType.TIME.value: time_ns(),
+                HeaderLabelType.STATUSCODE.value: SCodeType.BADCONSTRUCTION.value,
+            })
+
+            res_fram = Frame(header_f, FrameBody())
         except FunctionNotImplementedError as fni:
-            res_fram = Frame(
-                {HeaderLabelType.STATUSCODE.value: SCodeType.FunctionNotImplemented.value},
-                {}
-            )
+            header_f = FrameHeader({
+                HeaderLabelType.TIME.value: time_ns(),
+                HeaderLabelType.STATUSCODE.value: SCodeType.FunctionNotImplemented.value,
+            })
+
+            res_fram = Frame(header_f, FrameBody())
 
         client_s.send(bytes(res_fram.__str__(), 'UTF-8'))
         client_s.close()
