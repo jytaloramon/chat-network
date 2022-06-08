@@ -53,7 +53,7 @@ class ChatFramework:
         except FunctionNotImplementedError as fni:
             header_f = FrameHeader({
                 HeaderLabelType.TIME.value: time_ns(),
-                HeaderLabelType.STATUSCODE.value: SCodeType.FunctionNotImplemented.value,
+                HeaderLabelType.STATUSCODE.value: SCodeType.FUNCNOTIMPLEMENTED.value,
             })
 
             res_fram = Frame(header_f, FrameBody())

@@ -23,12 +23,14 @@ class MethodType(Enum):
 
 @unique
 class SCodeLabelType(Enum):
-    BAD = 'BAD_FORMAT'
+    BADCONSTRUCTION = 'BAD_FORMAT'
+    FunctionNotImplemented = ''
     UNAUTHORIZED = 'UNAUTHORIZED'
 
 
 @unique
 class SCodeType(Enum):
     BADCONSTRUCTION = 10
-    FunctionNotImplemented = 11
+    FUNCNOTIMPLEMENTED = 11
+    SUCCESS=20
     UNAUTHORIZED = 12
