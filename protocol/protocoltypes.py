@@ -6,6 +6,7 @@ class HeaderLabelType(Enum):
     RS = 'rs'
     METHOD = 'mt'
     STATUSCODE = 'sc'
+    TIME = 'tm'
     TOKEN = 'tk'
     LASTUPDATE = 'lu'
 

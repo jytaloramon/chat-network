@@ -1,37 +1,73 @@
 import json
+from typing import Dict, List
+
+from protocol.protocoltypes import HeaderLabelType
+
+
+class FrameHeader:
+
+    def __init__(self, data_mapper: Dict) -> None:
+
+        self._data: Dict[str, any] = {
+            HeaderLabelType.RS.value: None,
+            HeaderLabelType.METHOD.value: None,
+            HeaderLabelType.STATUSCODE.value: None,
+            HeaderLabelType.TIME.value: None,
+            HeaderLabelType.LASTUPDATE.value: None,
+            HeaderLabelType.TOKEN.value: None,
+        }
+
+        self._mapper(data_mapper)
+
+    def get_data(self) -> Dict[str, any]:
+
+        return {
+            k: i
+            for k, i in self._data.items()
+            if i is not None
+        }
+
+    def _mapper(self, data: Dict):
+
+        for h in self._data.keys():
+            item = data.get(h)
+            if item is not None:
+                self._data[h] = item
+
+
+class FrameBody:
+
+    def __init__(self, data: Dict[str, any] | List[Dict[str, any]] = None) -> None:
+
+        self._data = data
+
+    def get_data(self) -> any:
+
+        return self._data
 
 
 class Frame:
 
-    def __init__(self, header: dict[str, any], body:  dict[str, any]) -> None:
+    def __init__(self, header: FrameHeader, body:  FrameBody) -> None:
 
-        self._data: dict[str, dict[str, any]] = {
+        self._data: dict[str, FrameHeader | FrameBody] = {
             'header': header, 'body': body}
 
-    def get_data(self) -> dict[str, dict[str, any]]:
+    def get_data(self) -> dict[str, FrameHeader | FrameBody]:
 
         return self._data
 
-    def get_header(self):
+    def get_header(self) -> FrameHeader:
 
         return self._data.get('header')
 
-    def get_body(self):
+    def get_body(self) -> FrameBody:
 
         return self._data.get('body')
 
     def __str__(self) -> str:
 
-        return json.dumps(self._data)
-
-
-class FrameHeader:
-
-    def __init__(self) -> None:
-        pass
-
-
-class FrameBody:
-
-    def __init__(self) -> None:
-        pass
+        return json.dumps({
+            'header': self.get_header().get_data(),
+            'body': self.get_body().get_data() if self.get_body().get_data() is not None else None
+        })
