@@ -5,7 +5,7 @@ from enum import Enum, auto, unique
 class HeaderLabelType(Enum):
     RS = 'rs'
     METHOD = 'mt'
-    STATUSCODE = 'cs'
+    STATUSCODE = 'sc'
     TOKEN = 'tk'
     LASTUPDATE = 'lu'
 
@@ -13,28 +13,21 @@ class HeaderLabelType(Enum):
 @unique
 class MethodLabelType(Enum):
     AUTH = 'auth'
-    FIND = 'find'
-    GET = 'getmsg'
-    CREATE = 'create'
-    JOIN = 'join'
 
 
 @unique
 class MethodType(Enum):
     AUTH = 11
-    FIND = 20
-    GET = 21
-    CREATE = 30
-    JOIN = 40
 
 
 @unique
-class CodeLabelType(Enum):
+class SCodeLabelType(Enum):
     BAD = 'BAD_FORMAT'
     UNAUTHORIZED = 'UNAUTHORIZED'
 
 
 @unique
-class CodeType(Enum):
-    BAD = 10
-    UNAUTHORIZED = 11
+class SCodeType(Enum):
+    BADCONSTRUCTION = 10
+    FunctionNotImplemented = 11
+    UNAUTHORIZED = 12

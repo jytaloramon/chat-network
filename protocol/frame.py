@@ -12,6 +12,26 @@ class Frame:
 
         return self._data
 
+    def get_header(self):
+
+        return self._data.get('header')
+
+    def get_body(self):
+
+        return self._data.get('body')
+
     def __str__(self) -> str:
 
         return json.dumps(self._data)
+
+
+class FrameHeader:
+
+    def __init__(self) -> None:
+        pass
+
+
+class FrameBody:
+
+    def __init__(self) -> None:
+        pass

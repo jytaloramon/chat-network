@@ -7,7 +7,7 @@ t = socket()
 
 t.connect(('localhost', 7533))
 
-frame = Frame({'rs': 1}, {})
+frame = Frame({'rs': 10}, {})
 
 print(frame.__str__())
 
