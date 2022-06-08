@@ -1,7 +1,7 @@
 from typing import Callable, Dict, List, List
 from framework.error import BadConstructionError, FunctionNotImplementedError
 
-from protocol.frame import Frame
+from protocol.frame import Frame, FrameBody, FrameHeader
 from protocol.protocoltypes import HeaderLabelType, MethodType
 
 
@@ -47,7 +47,7 @@ class RouterManager:
             raise BadConstructionError('Recurso não informado')
 
         if rs == 1:
-            return Frame({}, {'data': self._get_rss()})
+            return Frame(FrameHeader({'tt': 'kp'}), FrameBody(self._get_rss()))
 
         mt = hearder.get(HeaderLabelType.METHOD.value)
 
@@ -65,9 +65,7 @@ class RouterManager:
             raise FunctionNotImplementedError(
                 'Recurso não localizado/implementado')
 
-        body = frame.get_body()
-
-        return routine(hearder, body)
+        return routine(frame)
 
     def _get_rss(self) -> List[Dict[str, any]]:
 
