@@ -8,14 +8,7 @@ class FrameHeader:
 
     def __init__(self, data_mapper: Dict) -> None:
 
-        self._data: Dict[str, any] = {
-            HeaderLabelType.RS.value: None,
-            HeaderLabelType.METHOD.value: None,
-            HeaderLabelType.STATUSCODE.value: None,
-            HeaderLabelType.TIME.value: None,
-            HeaderLabelType.LASTUPDATE.value: None,
-            HeaderLabelType.TOKEN.value: None,
-        }
+        self._data: Dict[str, any] = {k.value: None for k in HeaderLabelType}
 
         self._mapper(data_mapper)
 

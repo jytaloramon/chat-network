@@ -9,6 +9,8 @@ class HeaderLabelType(Enum):
     TIME = 'tm'
     TOKEN = 'tk'
     LASTUPDATE = 'lu'
+    KEY = 'ky'
+    UTIL = 'UT'
 
 
 @unique
@@ -19,6 +21,11 @@ class MethodLabelType(Enum):
 @unique
 class MethodType(Enum):
     AUTH = 11
+    CREATE = 12
+    GET = 16
+    LIST = 13
+    JOIN = 14
+    POST = 15
 
 
 @unique
@@ -32,5 +39,5 @@ class SCodeLabelType(Enum):
 class SCodeType(Enum):
     BADCONSTRUCTION = 10
     FUNCNOTIMPLEMENTED = 11
-    SUCCESS=20
+    SUCCESS = 20
     UNAUTHORIZED = 12

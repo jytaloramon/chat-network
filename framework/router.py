@@ -23,8 +23,17 @@ class Router:
 
         return self._methods.get(mt_id)
 
-    def auth(self, func: Callable[[any, any], Frame]):
+    def auth(self, func: Callable[[Frame], Frame]):
         self._methods[MethodType.AUTH.value] = func
+
+    def create(self, func: Callable[[Frame], Frame]):
+        self._methods[MethodType.CREATE.value] = func
+
+    def list(self, func: Callable[[Frame], Frame]):
+        self._methods[MethodType.LIST.value] = func
+
+    def join(self, func: Callable[[Frame], Frame]):
+        self._methods[MethodType.JOIN.value] = func
 
 
 class RouterManager:
