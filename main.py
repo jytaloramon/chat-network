@@ -1,13 +1,13 @@
 from socket import socket
 
-from protocol.frame import Frame
+from protocol.frame import Frame, FrameBody, FrameHeader
 from protocol.protocoltypes import MethodType
 
 t = socket()
 
 t.connect(('localhost', 7533))
 
-frame = Frame({'rs': 10}, {})
+frame = Frame(FrameHeader({'rs': 11, 'mt': 13, 'ky': 'Sala 1'}), FrameBody())
 
 print(frame.__str__())
 
