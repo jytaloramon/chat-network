@@ -7,25 +7,24 @@ class HeaderLabelType(Enum):
     METHOD = 'mt'
     STATUSCODE = 'sc'
     TIME = 'tm'
-    TOKEN = 'tk'
-    LASTUPDATE = 'lu'
     KEY = 'ky'
-    UTIL = 'UT'
+    LASTUPDATE = 'lu'
 
 
 @unique
 class MethodLabelType(Enum):
     AUTH = 'auth'
+    PUSH = 'push'
+    PULL = 'pull'
+    JOIN = 'join'
 
 
 @unique
 class MethodType(Enum):
     AUTH = 11
-    CREATE = 12
-    GET = 16
-    LIST = 13
+    PUSH = 12
+    PULL = 16
     JOIN = 14
-    POST = 15
 
 
 @unique
