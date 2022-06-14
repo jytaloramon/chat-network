@@ -1,4 +1,5 @@
 import json
+from time import time_ns
 from typing import Dict, List
 
 from protocol.protocoltypes import HeaderLabelType
@@ -6,13 +7,17 @@ from protocol.protocoltypes import HeaderLabelType
 
 class FrameHeader:
 
-    def __init__(self, data_mapper: Dict) -> None:
+    def __init__(self, data_mapper: Dict = None) -> None:
 
         self._data: Dict[str, any] = {k.value: None for k in HeaderLabelType}
 
-        self._mapper(data_mapper)
+        if data_mapper is not None:
+            self._mapper(data_mapper)
 
     def get_data(self) -> Dict[str, any]:
+
+        if self._data.get(HeaderLabelType.TIME.value) is None:
+            self._data[HeaderLabelType.TIME.value] = time_ns()
 
         return {
             k: i
@@ -26,6 +31,27 @@ class FrameHeader:
             item = data.get(h)
             if item is not None:
                 self._data[h] = item
+
+    def set_rs(self, rs: int):
+        self._data[HeaderLabelType.RS.value] = rs
+
+    def set_method(self, mt: int):
+        self._data[HeaderLabelType.METHOD.value] = mt
+
+    def set_status_code(self, sc: int):
+        self._data[HeaderLabelType.STATUSCODE.value] = sc
+
+    def set_time(self, tm: int):
+        self._data[HeaderLabelType.TIME.value] = tm
+
+    def set_key(self, key: str):
+        self._data[HeaderLabelType.KEY.value] = key
+
+    def set_last_update(self, lu: str):
+        self._data[HeaderLabelType.LASTUPDATE.value] = lu
+
+    def set_room_key(self, rmk: str):
+        self._data[HeaderLabelType.ROOMKEY.value] = rmk
 
 
 class FrameBody:
