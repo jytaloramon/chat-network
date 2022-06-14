@@ -13,5 +13,5 @@ class ServerThreadPool:
 
         thread_task = Thread(target=self._task, args=(data, len_buffer))
         thread_task.start()
-        
+
         self._threads.append(thread_task)
