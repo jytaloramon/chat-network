@@ -47,11 +47,14 @@ class FrameHeader:
     def set_key(self, key: str):
         self._data[HeaderLabelType.KEY.value] = key
 
-    def set_last_update(self, lu: str):
-        self._data[HeaderLabelType.LASTUPDATE.value] = lu
-
     def set_room_key(self, rmk: str):
         self._data[HeaderLabelType.ROOMKEY.value] = rmk
+
+    def set_apk(self, apk: str):
+        self._data[HeaderLabelType.PUBLICKEY.value] = apk
+
+    def set_last_update(self, lu: str):
+        self._data[HeaderLabelType.LASTUPDATE.value] = lu
 
 
 class FrameBody:

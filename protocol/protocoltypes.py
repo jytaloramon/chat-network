@@ -3,12 +3,14 @@ from enum import Enum, auto, unique
 
 @unique
 class HeaderLabelType(Enum):
-    RS = 'rs'
-    METHOD = 'mt'
-    STATUSCODE = 'sc'
-    TIME = 'tm'
-    KEY = 'ky'
-    LASTUPDATE = 'lu'
+    RS = 'rs'           # int
+    METHOD = 'mt'       # int
+    STATUSCODE = 'sc'   # int
+    TIME = 'tm'         # str
+    KEY = 'key'         # str
+    ROOMKEY = 'rmk'     # str
+    PUBLICKEY = 'apk'   # str
+    LASTUPDATE = 'ltu'  # str
 
 
 @unique
@@ -29,8 +31,10 @@ class MethodType(Enum):
 
 @unique
 class SCodeLabelType(Enum):
-    BADCONSTRUCTION = 'BAD_FORMAT'
-    FunctionNotImplemented = ''
+    BADCONSTRUCTION = 'FRAME_BAD_CONSTRUCTION'
+    FUNCNOTIMPLEMENTED = 'FUNC_NOT_IMPLEMENTED'
+    SUCCESS = 'SUCESS'
+    FAILURE = 'FAILURE'
     UNAUTHORIZED = 'UNAUTHORIZED'
 
 
@@ -39,4 +43,5 @@ class SCodeType(Enum):
     BADCONSTRUCTION = 10
     FUNCNOTIMPLEMENTED = 11
     SUCCESS = 20
-    UNAUTHORIZED = 12
+    FAILURE = 30
+    UNAUTHORIZED = 31
