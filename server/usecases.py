@@ -1,59 +1,64 @@
-from typing import Dict
+from typing import List, Tuple
 from uuid import uuid4
-from server.entities import ChatEntity, RoomChatEntity, UserEntity
+from server.entities import AppEntity, ChatEntity, UseRegEntity, UserEntity
 from server.errors import NotFoundError
+from rsa import PublicKey, PrivateKey
+
+app = AppEntity()
 
 
-class ChatUseCases:
+class AppUseCases:
 
     def __init__(self) -> None:
+        pass
 
-        self._chat_entity = ChatEntity()
+    def get_rsa(self) -> Tuple[PublicKey, PrivateKey]:
 
-    def auth_user(self, name: str) -> str:
+        return (app.get_pub_key(), app.get_pv_key())
+
+    def new_user(self, name: str) -> str:
+
+        user = app.get_user_by_name(name)
+
+        if user is not None:
+            raise Exception('Usuário já existe')
 
         user = UserEntity(name)
-        token = uuid4().__str__()
+        uuid = uuid4().__str__()
+        user_reg = UseRegEntity(uuid, user)
 
-        self._chat_entity.new_user(token, user)
+        app.add_user(user)
+        app.add_users_reg(user_reg)
 
-        return token
+        return uuid
 
-    def create_room(self, name: str) -> str:
+    def new_chat(self, uuid_user: str, name_char: str) -> str:
 
-        token = uuid4().__str__()
-        room_chat = RoomChatEntity(token, name)
+        user_reg = app.get_users_reg_by_uuid(uuid_user)
 
-        self._chat_entity.new_room(room_chat)
+        if user_reg is None:
+            raise Exception('Usuário não existe')
 
-        return token
+        uuid = uuid4().__str__()
+        chat = ChatEntity(uuid, user_reg.get_user())
+        app.add_chat(uuid, chat)
 
-    def list_room(self) -> Dict[str, any]:
+        return uuid
 
-        arr = []
-        for k, i in self._chat_entity.get_chat_rooms().items():
-            arr.append({'id': i.get_id(), 'name': i.get_name()})
+    def join_user_chat(self, uuid_user: str, uuid_chat: str) -> None:
 
-        return arr
+        user_reg = app.get_users_reg_by_uuid(uuid_user)
 
-    def join_user_room(self, id_room: str, id_user) -> None:
+        if user_reg is None:
+            raise Exception('Usuário não existe')
 
-        self._chat_entity.join_room(id_room, id_user)
+        chat = app.get_chats_by_uuid(uuid_chat)
 
-    def get_info_room(self, id_room: str) -> Dict[str, any]:
+        if chat is None:
+            raise Exception('Chat não existe')
 
-        room = self._chat_entity.get_chat_room_by_id(id_room)
+        chat.add_user(user_reg.get_uuid(), user_reg.get_user())
 
-        if room is None:
-            raise NotFoundError('Sala não encontrada')
+    def get_chats(self) -> List[ChatEntity]:
 
-        return {
-            'id': room.get_id(),
-            'name': room.get_name(),
-            'users': room.get_users()
-        }
-
-
-repo_use_cases: Dict[str, any] = {
-    'chat': ChatUseCases()
-}
+        return app.get_chats()

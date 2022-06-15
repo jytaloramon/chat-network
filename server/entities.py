@@ -1,8 +1,5 @@
-from email import message
 from typing import Dict, List
-from uuid import uuid4
-
-from server.errors import NotFoundError
+import rsa
 
 
 class UserEntity:
@@ -14,6 +11,22 @@ class UserEntity:
     def get_name(self) -> str:
 
         return self._name
+
+
+class UseRegEntity:
+
+    def __init__(self, uuid: str, user: UserEntity) -> None:
+
+        self._uuid = uuid
+        self._user = user
+
+    def get_uuid(self) -> str:
+
+        return self._uuid
+
+    def get_user(self) -> UserEntity:
+
+        return self._user
 
 
 class MessageEntity:
@@ -37,81 +50,96 @@ class MessageEntity:
         return self._moment
 
 
-class RoomChatEntity:
+class ChatEntity:
 
-    def __init__(self, id: str, name: str) -> None:
+    def __init__(self, uuid: str, owner: UserEntity) -> None:
 
-        self._id = id
-        self._name = name
-        self._users: List[UserEntity] = []
+        self._uuid = uuid
+        self._owner: UserEntity = owner
+        self._users: Dict[str, UserEntity] = {}
         self._messages: List[MessageEntity] = []
 
-    def get_id(self) -> str:
+    def get_uuid(self) -> str:
 
-        return self._id
+        return self._uuid
 
-    def get_name(self) -> str:
+    def get_owner(self) -> UserEntity:
 
-        return self._name
+        return self._owner
 
     def get_users(self) -> List[UserEntity]:
 
-        return self._users
+        return list(self._users.values())
 
-    def add_user(self, user: UserEntity) -> None:
+    def get_user_by_uuid(self, uuid: str) -> UserEntity:
 
-        self._users.append(user)
+        if self._users.get(uuid) is None:
+            return None
 
-    def get_messages(self, time_min=0) -> List[MessageEntity]:
+        return self._users[uuid]
 
-        return list(filter(lambda x: x.get_moment() >= time_min, self._messages))
+    def add_user(self, uuid: str, user: UserEntity) -> None:
 
-    def add_message(self, msg: MessageEntity) -> None:
+        self._users[uuid] = user
 
-        self._messages.append(msg)
+    def get_messages(self, from_moment: int = 0) -> List[MessageEntity]:
+
+        return list(filter(lambda x: x.get_moment() >= from_moment, self._messages))
+
+    def add_message(self, message: MessageEntity) -> None:
+
+        self._messages.append(message)
 
 
-class ChatEntity:
+class AppEntity:
 
     def __init__(self) -> None:
 
-        self._chat_rooms: Dict[str, RoomChatEntity] = {}
+        self._pub_key, self._pv_key = rsa.newkeys(2048)
+        self._chats: Dict[str, ChatEntity] = {}
         self._users: Dict[str, UserEntity] = {}
+        self._users_reg: Dict[str, UseRegEntity] = {}
 
-    def get_chat_rooms(self) -> Dict[str, RoomChatEntity]:
+    def get_pub_key(self) -> rsa.PublicKey:
 
-        return self._chat_rooms
+        return self._pub_key
 
-    def get_chat_room_by_id(self, id: str) -> RoomChatEntity:
+    def get_pv_key(self) -> rsa.PrivateKey:
 
-        if self._chat_rooms.get(id) is None:
-            return None
+        return self._pv_key
 
-        return self._chat_rooms[id]
+    def get_chats(self) -> List[ChatEntity]:
 
-    def get_users(self) -> Dict[str, UserEntity]:
+        return list(self._chats.values())
 
-        return self._users
+    def get_chats_by_uuid(self, uuid: str) -> ChatEntity:
 
-    def get_user_by_id(self,  id: str) -> Dict[str, UserEntity]:
+        return self._chats.get(uuid)
 
-        return self._users[id]
+    def add_chat(self, uuid: str, chat: ChatEntity) -> None:
 
-    def new_user(self, id: str, user: UserEntity) -> None:
+        self._chats[uuid] = chat
 
-        self._users[id] = user
+    def get_users(self) -> List[UserEntity]:
 
-    def new_room(self, room_chat: RoomChatEntity) -> None:
+        return list(self._users.values())
 
-        self._chat_rooms[room_chat.get_id()] = room_chat
+    def get_user_by_name(self, name: str) -> UserEntity:
 
-    def join_room(self, id_room: str, id_user: str):
+        return self._users.get(name)
 
-        if self._chat_rooms.get(id_room) is None:
-            raise NotFoundError('Sala não encontrada')
+    def add_user(self, user: UserEntity) -> None:
 
-        if self._users.get(id_user) is None:
-            raise NotFoundError('User não encontrada')
+        self._users[user.get_name()] = user
 
-        room = self._chat_rooms[id_room]
-        room.add_user(self._users[id_user])
+    def get_users_reg(self) -> List[UseRegEntity]:
+
+        return list(self._users_reg.values())
+
+    def get_users_reg_by_uuid(self, uuid: str) -> UseRegEntity:
+
+        return self._users_reg.get(uuid)
+
+    def add_users_reg(self, uuid: str, user: UseRegEntity) -> None:
+
+        self._users_reg[uuid] = user
