@@ -1,4 +1,4 @@
-from enum import Enum, auto, unique
+from enum import Enum, unique
 
 
 @unique
@@ -10,6 +10,7 @@ class HeaderLabelType(Enum):
     KEY = 'key'         # str
     ROOMKEY = 'rmk'     # str
     PUBLICKEY = 'apk'   # str
+    RSA = 'rsa'         # int
     LASTUPDATE = 'ltu'  # str
 
 

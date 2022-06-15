@@ -53,6 +53,9 @@ class FrameHeader:
     def set_apk(self, apk: str):
         self._data[HeaderLabelType.PUBLICKEY.value] = apk
 
+    def set_rsa(self, rsa: int):
+        self._data[HeaderLabelType.RSA.value] = rsa
+
     def set_last_update(self, lu: str):
         self._data[HeaderLabelType.LASTUPDATE.value] = lu
 
