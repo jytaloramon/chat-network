@@ -4,11 +4,11 @@ from enum import Enum, unique
 @unique
 class HeaderLabelType(Enum):
     RS = 'rs'           # int
-    METHOD = 'mt'       # int
+    METHOD = 'act'      # int
     STATUSCODE = 'sc'   # int
     TIME = 'tm'         # str
     KEY = 'key'         # str
-    ROOMKEY = 'rmk'     # str
+    ROOMKEY = 'chk'     # str
     PUBLICKEY = 'apk'   # str
     RSA = 'rsa'         # int
     LASTUPDATE = 'ltu'  # str
