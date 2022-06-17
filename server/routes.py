@@ -45,7 +45,8 @@ def router_user() -> Router:
 
     def auth(frame: Frame) -> Frame:
 
-        username = frame.get_header()[HeaderLabelType.KEY.value]
+        username = frame.get_header().get_data().get_data()[
+            HeaderLabelType.KEY.value]
         token = use_case.new_user(username)
 
         header_res = FrameHeader()
@@ -64,7 +65,7 @@ def router_chat() -> Router:
 
     def push(frame: Frame) -> Frame:
 
-        uuid_user = frame.get_header()[HeaderLabelType.KEY.value]
+        uuid_user = frame.get_header().get_data()[HeaderLabelType.KEY.value]
         uuid_chat = use_case.new_chat(uuid_user)
 
         header_res = FrameHeader()
@@ -88,8 +89,9 @@ def router_chat() -> Router:
 
     def join(frame: Frame) -> Frame:
 
-        uuid_user = frame.get_header()[HeaderLabelType.KEY.value]
-        uuid_chat = frame.get_header()[HeaderLabelType.ROOMKEY.value]
+        uuid_user = frame.get_header().get_data()[HeaderLabelType.KEY.value]
+        uuid_chat = frame.get_header().get_data()[
+            HeaderLabelType.ROOMKEY.value]
         use_case.join_user_chat(uuid_user, uuid_chat)
 
         header_res = FrameHeader()
@@ -109,8 +111,9 @@ def router_message() -> Router:
 
     def push(frame: Frame) -> Frame:
 
-        uuid_user = frame.get_header()[HeaderLabelType.KEY.value]
-        uuid_chat = frame.get_header()[HeaderLabelType.ROOMKEY.value]
+        uuid_user = frame.get_header().get_data()[HeaderLabelType.KEY.value]
+        uuid_chat = frame.get_header().get_data()[
+            HeaderLabelType.ROOMKEY.value]
         text = frame.get_body()['text']
 
         header_res = FrameHeader()
@@ -122,9 +125,11 @@ def router_message() -> Router:
 
     def pull(frame: Frame) -> Frame:
 
-        uuid_user = frame.get_header()[HeaderLabelType.KEY.value]
-        uuid_chat = frame.get_header()[HeaderLabelType.ROOMKEY.value]
-        last_update = frame.get_header()[HeaderLabelType.LASTUPDATE.value]
+        uuid_user = frame.get_header().get_data()[HeaderLabelType.KEY.value]
+        uuid_chat = frame.get_header().get_data()[
+            HeaderLabelType.ROOMKEY.value]
+        last_update = frame.get_header().get_data()[
+            HeaderLabelType.LASTUPDATE.value]
 
         header_res = FrameHeader()
         header_res.set_status_code(SCodeType.SUCCESS.value)
