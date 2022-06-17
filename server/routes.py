@@ -45,7 +45,7 @@ def router_user() -> Router:
 
     def auth(frame: Frame) -> Frame:
 
-        username = frame.get_header().get_data().get_data()[
+        username = frame.get_header().get_data()[
             HeaderLabelType.KEY.value]
         token = use_case.new_user(username)
 
@@ -114,7 +114,7 @@ def router_message() -> Router:
         uuid_user = frame.get_header().get_data()[HeaderLabelType.KEY.value]
         uuid_chat = frame.get_header().get_data()[
             HeaderLabelType.ROOMKEY.value]
-        text = frame.get_body()['text']
+        text = frame.get_body().get_data()['text']
 
         header_res = FrameHeader()
         header_res.set_status_code(SCodeType.SUCCESS.value)
