@@ -1,12 +1,16 @@
 import json
 from socket import socket
 from typing import Dict, Tuple
+
+import rsa
 from framework.error import BadConstructionError, FunctionNotImplementedError
 from protocol.frame import Frame, FrameBody, FrameHeader
 from protocol.protocoltypes import HeaderLabelType, SCodeType
 from framework.router import RouterManager
 from framework.serverthreadpool import ServerThreadPool
 from time import time_ns
+
+from server.routes import use_case
 
 
 class ChatFramework:
@@ -20,6 +24,8 @@ class ChatFramework:
         self._server_connection: socket = socket()
         self._server_connection.bind((host, port))
         self._server_connection.listen(self._backlog)
+
+        self._req_id = 0
 
         print(f'Server UP [{host}:{port}]')
 
@@ -35,34 +41,55 @@ class ChatFramework:
 
     def _client_connection(self, client_s: socket, len_buffer: int):
 
-        data = client_s.recv(len_buffer)
-        header, body = self._data_to_frame(data)
-        req_frame = Frame(header, body)
+        data_inp = data = client_s.recv(len_buffer)
 
-        res_fram: Frame = None
+        if not(data[0] == ord('{') and data[-1] == ord('}')):
+            data = self._decrypt_data(data)
+
+        header, body = self._data_to_frame(data)
+        frame_req = Frame(FrameHeader(header), FrameBody(body))
+
+        frame_res: Frame = None
 
         try:
-            res_fram: Frame = self._router_manager.solver(req_frame)
+            frame_res: Frame = self._router_manager.solver(frame_req)
         except BadConstructionError as bc:
             header_f = FrameHeader({
                 HeaderLabelType.TIME.value: time_ns(),
                 HeaderLabelType.STATUSCODE.value: SCodeType.BADCONSTRUCTION.value,
             })
 
-            res_fram = Frame(header_f, FrameBody())
+            frame_res = Frame(header_f, FrameBody())
         except FunctionNotImplementedError as fni:
             header_f = FrameHeader({
                 HeaderLabelType.TIME.value: time_ns(),
                 HeaderLabelType.STATUSCODE.value: SCodeType.FUNCNOTIMPLEMENTED.value,
             })
 
-            res_fram = Frame(header_f, FrameBody())
+            frame_res = Frame(header_f, FrameBody())
 
-        client_s.send(bytes(res_fram.__str__(), 'UTF-8'))
+        client_s.send(bytes(frame_res.__str__(), 'UTF-8'))
         client_s.close()
+
+        self._log(data_inp, frame_req, frame_res)
+        self._req_id += 1
 
     def _data_to_frame(self, data: bytes) -> Tuple[Dict, Dict]:
 
         frame = json.loads(data)
 
         return frame['header'], frame['body']
+
+    def _decrypt_data(self, data: bytes) -> bytes:
+
+        _, pv_k = use_case.get_rsa()
+
+        return rsa.decrypt(data, pv_k)
+
+    def _log(self, data_inp: bytes, frame_req: Frame, frame_res: Frame) -> None:
+
+        print(f'Request: {self._req_id} []')
+        print(f' - {data_inp}')
+        print(f' - {frame_req.__str__()}')
+        print(f' - {frame_res.__str__()}')
+        print('\n\n')

@@ -73,7 +73,7 @@ class RouterManager:
 
         hearder = frame.get_header()
 
-        rs = hearder.get(HeaderLabelType.RS.value)
+        rs = hearder.get_data()[HeaderLabelType.RS.value]
 
         if rs is None:
             raise BadConstructionError('Recurso não informado')
@@ -84,7 +84,7 @@ class RouterManager:
                 FrameBody(self._get_rss())
             )
 
-        mt = hearder.get(HeaderLabelType.METHOD.value)
+        mt = hearder.get_data()[HeaderLabelType.METHOD.value]
 
         if mt is None:
             raise BadConstructionError('Método não informado')
