@@ -113,8 +113,25 @@ class ClientChat:
                 res = self._send_action(Frame(header, FrameBody()))
 
                 if len(res.get_body().get_data()) > 0:
+                    if self._chat_current == 0:
+                        for i in res.get_body().get_data():
+                            username = i['username']
+                            text = i['text']
+                            moment_msg = i['moment']
+
+                            print(f'> {username} - {text} [{moment_msg}]')
+                    else:
+                        for i in res.get_body().get_data():
+                            for i in res.get_body().get_data():
+                                username = i['username']
+                                text = i['text']
+                                moment_msg = i['moment']
+
+                                if username != self._username:
+                                    print(
+                                        f'> {username} - {text} [{moment_msg}]')
+
                     self._chat_messages.extend(res.get_body().get_data())
-                    print(self._chat_messages)
 
                 self._chat_last_update = res.get_header().get_data()[
                     HeaderLabelType.TIME.value]
@@ -146,10 +163,10 @@ class ClientChat:
                     self._menu_info_chat()
                     input('Pressione enter para sair...')
 
+                os.system('clear')
+
                 self._chat_last_update = 0
                 self._menu_is_visible = False
-
-                os.system('clear')
 
                 print('----- Chat -----')
                 print(f'Digite seu username: {self._username}')
