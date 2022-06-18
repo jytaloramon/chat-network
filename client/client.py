@@ -113,13 +113,17 @@ class ClientChat:
                 res = self._send_action(Frame(header, FrameBody()))
 
                 if len(res.get_body().get_data()) > 0:
-                    if self._chat_current == 0:
+                    if self._chat_last_update == 0:
                         for i in res.get_body().get_data():
                             username = i['username']
                             text = i['text']
                             moment_msg = i['moment']
 
-                            print(f'> {username} - {text} [{moment_msg}]')
+                            if username != self._username:
+                                print(f'> {username} - {text} [{moment_msg}]')
+                            else:
+                                print(f'> my - {text} [{moment_msg}]')
+                        self._chat_messages = res.get_body().get_data()
                     else:
                         for i in res.get_body().get_data():
                             for i in res.get_body().get_data():
@@ -131,7 +135,7 @@ class ClientChat:
                                     print(
                                         f'> {username} - {text} [{moment_msg}]')
 
-                    self._chat_messages.extend(res.get_body().get_data())
+                        self._chat_messages.extend(res.get_body().get_data())
 
                 self._chat_last_update = res.get_header().get_data()[
                     HeaderLabelType.TIME.value]
