@@ -1,4 +1,6 @@
 from typing import List
+
+import rsa
 from framework.router import Router, RouterManager
 from protocol.frame import Frame, FrameBody, FrameHeader
 from protocol.protocoltypes import HeaderLabelType, SCodeType
@@ -12,14 +14,12 @@ def router_controller(routes_all: List[Router]) -> Router:
     router = Router('controller')
     routes = [router] + routes_all
 
-    def auth(frame_req=Frame) -> Frame:
-
-        pub_key, _ = use_case.get_rsa()
+    def auth(frame_req: Frame) -> Frame:
+        aes = use_case.get_aes()
 
         header_res = FrameHeader()
         header_res.set_status_code(SCodeType.SUCCESS.value)
-        header_res.set_apk(str(pub_key.n) + ' ' + str(pub_key.e))
-        header_res.set_rsa(2048)
+        header_res.set_key(aes)
 
         return Frame(header_res, FrameBody())
 
