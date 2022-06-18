@@ -1,31 +1,40 @@
+import json
+from operator import le
 from socket import socket
 
-from protocol.frame import Frame, FrameBody, FrameHeader
+import rsa
+
+from protocol.frame import Frame, FrameBody, FrameHeader, WrapperFrame
 from protocol.protocoltypes import MethodType
+
 
 t = socket()
 
 t.connect(('localhost', 7533))
 
+pub_k, pv_k = rsa.newkeys(2048)
+
 frame = Frame(FrameHeader(
     {
-        'rs': 12,
+        'rs': 1,
         'act': 16,
         'ltu': 1655408232734985444,
-        'key': '18fcbe28-9f3e-4e85-b79d-f81233cfac2c',
-        'chk': '1b2e8b0b-861e-4c46-9a48-03ade564e501'
+        'apk': ' '.join([str(pub_k.n), str(pub_k.e)])
     }),
-    FrameBody({
-        'text': 'ramon'
-    })
+    FrameBody()
 )
 
-print(frame.__str__())
+wra = WrapperFrame(frame, {'enc': '', 'ids': '8b501a70-8147-4a84-90d3-a4cdac769a65'})
 
-t.send(bytes(frame.__str__(), 'UTF-8'))
-d = t.recv(2048)
+print(wra.__str__())
+
+t.send(bytes(wra.__str__(), 'utf-8'))
+d = t.recv(4096)
 t.close()
-print(d)
+
+data_j = json.loads(d)
+
+print(data_j)
 
 # Tested
 # - controller = auth, pull

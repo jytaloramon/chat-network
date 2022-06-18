@@ -27,16 +27,27 @@ class AppUseCases:
 
         return uuid_session + ' ' + key_str
 
-    def aes_decrypt(self, uuid_session: str, frame_str: bytes) -> str:
+    def aes_decrypt(self, uuid_session: str, frame_str: bytes) -> bytes:
+
+        data_c = app.get_aes_by_uuid(uuid_session)
+
+        if data_c is None:
+            raise Exception('UUID inválido')
+
+        de_cipher = data_c[2]
+
+        return de_cipher.decrypt(frame_str)
+
+    def aes_encrypt(self, uuid_session: str, frame_str: bytes) -> bytes:
 
         data_c = app.get_aes_by_uuid(uuid_session)
 
         if data_c is None:
             raise Exception('AES inválido')
 
-        de_cipher = data_c[2]
-
-        return de_cipher.decrypt(frame_str)
+        cipher = data_c[1]
+        
+        return cipher.encrypt(frame_str)
 
     def new_user(self, name: str) -> str:
 

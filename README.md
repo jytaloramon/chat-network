@@ -88,4 +88,13 @@ MESSAGE: Operation unavailable
 
 ## Tipos de Protocolos
 
+rs: recurso
+mt: Método
+sc: código status
+tm: trás o tempo de criação da resposta
+tk: serve pra trafegar token
+lu: última atualização
+ky: (key) busca por uma chave
+
+
 

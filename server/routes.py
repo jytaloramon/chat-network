@@ -2,7 +2,7 @@ from typing import List
 
 import rsa
 from framework.router import Router, RouterManager
-from protocol.frame import Frame, FrameBody, FrameHeader
+from protocol.frame import Frame, FrameBody, FrameHeader, WrapperFrame
 from protocol.protocoltypes import HeaderLabelType, SCodeType
 from server.usecases import AppUseCases
 
@@ -14,25 +14,31 @@ def router_controller(routes_all: List[Router]) -> Router:
     router = Router('controller')
     routes = [router] + routes_all
 
-    def auth(frame_req: Frame) -> Frame:
+    def auth(frame_req: Frame) -> WrapperFrame:
         aes = use_case.get_aes()
 
         header_res = FrameHeader()
         header_res.set_status_code(SCodeType.SUCCESS.value)
         header_res.set_key(aes)
 
-        return Frame(header_res, FrameBody())
+        return WrapperFrame(
+            Frame(header_res, FrameBody()),
+            {'enc': 'rsa', 'ids': ''}
+        )
 
-    def pull(frame_req=Frame) -> Frame:
+    def pull(frame_req=Frame) -> WrapperFrame:
 
         header_res = FrameHeader()
         header_res.set_status_code(SCodeType.SUCCESS.value)
 
-        return Frame(header_res, FrameBody([
-            {'id': r.get_id(), 'label': r.get_label(),
-             'methods': list(r.get_methods().keys())}
-            for r in routes
-        ]))
+        return WrapperFrame(
+            Frame(header_res, FrameBody([
+                {'id': r.get_id(), 'label': r.get_label(),
+                 'methods': list(r.get_methods().keys())}
+                for r in routes
+            ])),
+            {'enc': 'aes', 'ids': ''}
+        )
 
     router.auth(auth)
     router.pull(pull)

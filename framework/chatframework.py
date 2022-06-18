@@ -46,29 +46,28 @@ class ChatFramework:
 
         frame_req = wrap_f.get_frame()
 
-        frame_res: Frame = None
+        wframe_res = self._router_manager.solver(frame_req)
 
-        try:
-            frame_res: Frame = self._router_manager.solver(frame_req)
-        except BadConstructionError as bc:
-            header_f = FrameHeader({
-                HeaderLabelType.TIME.value: time_ns(),
-                HeaderLabelType.STATUSCODE.value: SCodeType.BADCONSTRUCTION.value,
-            })
+        frame_encrypt = wframe_res.get_frame()
 
-            frame_res = Frame(header_f, FrameBody())
-        except FunctionNotImplementedError as fni:
-            header_f = FrameHeader({
-                HeaderLabelType.TIME.value: time_ns(),
-                HeaderLabelType.STATUSCODE.value: SCodeType.FUNCNOTIMPLEMENTED.value,
-            })
+        # if wframe_res.get_data()['enc'] == 'rsa':
+        #    keys_p = str(frame_req.get_header().get_data()['apk']).split(' ')
 
-            frame_res = Frame(header_f, FrameBody())
+        #    frame_encrypt = self._encrypt_frame_rsa(
+        #        int(keys_p[0]), int(keys_p[1]), wframe_res.get_frame().__str__())
 
-        client_s.send(bytes(frame_res.__str__(), 'UTF-8'))
+        if wframe_res.get_data()['enc'] == 'aes':
+            ids = wrap_f.get_data()['ids']
+
+            frame_encrypt = str(self._encrypt_frame_aes(
+                ids, bytes(wframe_res.get_frame().__str__(), 'utf-8')))
+
+        wframe_res._data['frame'] = frame_encrypt
+
+        client_s.send(bytes(wframe_res.__str__(), 'UTF-8'))
         client_s.close()
 
-        self._log(data_inp, frame_req, frame_res)
+        self._log(data_inp, frame_req, wframe_res)
         self._req_id += 1
 
     def _data_to_frame(self, data: bytes) -> WrapperFrame:
@@ -78,8 +77,8 @@ class ChatFramework:
         ids = data_f[PreHeaderLabelType.IDSESSION.value]
         enc = data_f[PreHeaderLabelType.ENCRYPT.value]
 
-        if enc:
-            f_data = self._decrypt_data(ids, data_f['frame'])
+        if enc == 'aes':
+            f_data = self._decrypt_data_aes(ids, data_f['frame'])
             data_f['frame'] = f_data
 
         return WrapperFrame(
@@ -88,9 +87,19 @@ class ChatFramework:
             {'enc': data_f['enc'], 'ids': data_f['ids']}
         )
 
-    def _decrypt_data(self, uuid: str, data: bytes) -> str:
+    def _decrypt_data_aes(self, uuid: str, data: bytes) -> bytes:
 
         return use_case.aes_decrypt(uuid, data)
+
+    def _encrypt_frame_aes(self, uuid: str, data: bytes) -> bytes:
+
+        return use_case.aes_encrypt(uuid, data)
+
+    def _encrypt_frame_rsa(self, rsa_n: int,  rsa_e: int, data: bytes) -> bytes:
+
+        pub_k = rsa.PublicKey(rsa_n, rsa_e)
+
+        return rsa.encrypt(data, pub_k)
 
     def _log(self, data_inp: bytes, frame_req: Frame, frame_res: Frame) -> None:
 

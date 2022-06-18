@@ -1,7 +1,7 @@
 from typing import Callable, Dict, List, List
 from framework.error import BadConstructionError, FunctionNotImplementedError
 
-from protocol.frame import Frame, FrameBody, FrameHeader
+from protocol.frame import Frame, FrameBody, FrameHeader, WrapperFrame
 from protocol.protocoltypes import HeaderLabelType, MethodType, SCodeType
 
 
@@ -25,16 +25,16 @@ class Router:
     def get_routine(self, mt_id: int):
         return self._methods.get(mt_id)
 
-    def auth(self, func: Callable[[Frame], Frame]):
+    def auth(self, func: Callable[[Frame], WrapperFrame]):
         self._methods[MethodType.AUTH.value] = func
 
-    def push(self, func: Callable[[Frame], Frame]):
+    def push(self, func: Callable[[Frame], WrapperFrame]):
         self._methods[MethodType.PUSH.value] = func
 
-    def pull(self, func: Callable[[Frame], Frame]):
+    def pull(self, func: Callable[[Frame], WrapperFrame]):
         self._methods[MethodType.PULL.value] = func
 
-    def join(self, func: Callable[[Frame], Frame]):
+    def join(self, func: Callable[[Frame], WrapperFrame]):
         self._methods[MethodType.JOIN.value] = func
 
 
@@ -69,7 +69,7 @@ class RouterManager:
 
         self._routes[router.get_id()] = router
 
-    def solver(self, frame: Frame) -> Frame:
+    def solver(self, frame: Frame) -> WrapperFrame:
 
         hearder = frame.get_header()
 
@@ -79,9 +79,12 @@ class RouterManager:
             raise BadConstructionError('Recurso não informado')
 
         if rs == 1 and self._routes.get(1) is None:
-            return Frame(
-                FrameHeader({'sc': SCodeType.SUCCESS.value}),
-                FrameBody(self._get_rss())
+            return WrapperFrame(
+                Frame(
+                    FrameHeader({'sc': SCodeType.SUCCESS.value}),
+                    FrameBody(self._get_rss())
+                ),
+                {'enc': False, 'ids': ''}
             )
 
         mt = hearder.get_data()[HeaderLabelType.METHOD.value]

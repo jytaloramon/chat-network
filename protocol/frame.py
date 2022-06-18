@@ -118,7 +118,7 @@ class WrapperFrame:
 
         return self._data
 
-    def get_frame(self) -> Frame:
+    def get_frame(self) -> Frame | bytes:
 
         return self._data['frame']
 
@@ -146,7 +146,9 @@ class WrapperFrame:
     def __str__(self) -> str:
 
         wra = self.get_data()
-        frame = self.get_frame().get_data()
+
+        frame = self.get_frame() if type(
+            self.get_frame()) == str else self.get_frame().get_data()
 
         wra.update({'frame':  frame})
 

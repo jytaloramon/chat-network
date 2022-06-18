@@ -101,7 +101,7 @@ class AppEntity:
 
     def get_aes_by_uuid(self, key: str) -> Tuple[str, any, any]:
 
-        self._aes.get(key)
+        return self._aes.get(key)
 
     def add_aes(self, key: str, data: Tuple[str, any, any]) -> None:
 
