@@ -2,7 +2,7 @@ import json
 from time import time_ns
 from typing import Dict, List
 
-from protocol.protocoltypes import HeaderLabelType
+from protocol.protocoltypes import HeaderLabelType, PreHeaderLabelType
 
 
 class FrameHeader:
@@ -30,6 +30,7 @@ class FrameHeader:
         for h in self._data.keys():
             item = data.get(h)
             if item is not None:
+
                 self._data[h] = item
 
     def set_rs(self, rs: int):
@@ -80,7 +81,13 @@ class Frame:
 
     def get_data(self) -> dict[str, FrameHeader | FrameBody]:
 
-        return self._data
+        header = self.get_header().get_data()
+        body = self.get_body().get_data() if self.get_body().get_data() is not None else None
+
+        return {
+            'header': header,
+            'body':  body
+        }
 
     def get_header(self) -> FrameHeader:
 
@@ -91,10 +98,56 @@ class Frame:
         return self._data.get('body')
 
     def __str__(self) -> str:
-        header = self.get_header().get_data()
-        body = self.get_body().get_data() if self.get_body().get_data() is not None else None
 
-        return json.dumps({
-            'header': header,
-            'body':  body
-        })
+        return json.dumps(self.get_data())
+
+
+class WrapperFrame:
+
+    def __init__(self, frame: Frame, data_mapper: Dict[str, any] = None) -> None:
+
+        self._data: Dict[str, any] = {
+            k.value: None for k in PreHeaderLabelType}
+
+        self._data.update({'frame': frame})
+
+        if data_mapper is not None:
+            self._mapper(data_mapper)
+
+    def get_data(self) -> any:
+
+        return self._data
+
+    def get_frame(self) -> Frame:
+
+        return self._data['frame']
+
+    def _mapper(self, data: Dict):
+
+        for h in self._data.keys():
+            item = data.get(h)
+            if item is not None:
+                self._data[h] = item
+
+    def get_data(self) -> Dict[str, any]:
+
+        return {
+            k: i
+            for k, i in self._data.items()
+            if k != 'frame' and i is not None
+        }
+
+    def set_ids(self, ids: str):
+        self._data[PreHeaderLabelType.IDSESSION.value] = ids
+
+    def set_enc(self, enc: bool):
+        self._data[PreHeaderLabelType.ENCRYPT.value] = enc
+
+    def __str__(self) -> str:
+
+        wra = self.get_data()
+        frame = self.get_frame().get_data()
+
+        wra.update({'frame':  frame})
+
+        return json.dumps(wra)

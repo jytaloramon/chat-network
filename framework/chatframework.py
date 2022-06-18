@@ -4,8 +4,8 @@ from typing import Dict, Tuple
 
 import rsa
 from framework.error import BadConstructionError, FunctionNotImplementedError
-from protocol.frame import Frame, FrameBody, FrameHeader
-from protocol.protocoltypes import HeaderLabelType, SCodeType
+from protocol.frame import Frame, FrameBody, FrameHeader, WrapperFrame
+from protocol.protocoltypes import HeaderLabelType, PreHeaderLabelType, SCodeType
 from framework.router import RouterManager
 from framework.serverthreadpool import ServerThreadPool
 from time import time_ns
@@ -17,7 +17,7 @@ class ChatFramework:
 
     def __init__(self, host: str, port: int, router_manager: RouterManager) -> None:
 
-        self._len_buffer = 2048
+        self._len_buffer = 4096
         self._backlog = 50
         self._router_manager = router_manager
 
@@ -42,12 +42,9 @@ class ChatFramework:
     def _client_connection(self, client_s: socket, len_buffer: int):
 
         data_inp = data = client_s.recv(len_buffer)
+        wrap_f = self._data_to_frame(data)
 
-        if not(data[0] == ord('{') and data[-1] == ord('}')):
-            data = self._decrypt_data(data)
-
-        header, body = self._data_to_frame(data)
-        frame_req = Frame(FrameHeader(header), FrameBody(body))
+        frame_req = wrap_f.get_frame()
 
         frame_res: Frame = None
 
@@ -74,17 +71,26 @@ class ChatFramework:
         self._log(data_inp, frame_req, frame_res)
         self._req_id += 1
 
-    def _data_to_frame(self, data: bytes) -> Tuple[Dict, Dict]:
+    def _data_to_frame(self, data: bytes) -> WrapperFrame:
 
-        frame = json.loads(data)
+        data_f = json.loads(data)
 
-        return frame['header'], frame['body']
+        ids = data_f[PreHeaderLabelType.IDSESSION.value]
+        enc = data_f[PreHeaderLabelType.ENCRYPT.value]
 
-    def _decrypt_data(self, data: bytes) -> bytes:
+        if enc:
+            f_data = self._decrypt_data(ids, data_f['frame'])
+            data_f['frame'] = f_data
 
-        _, pv_k = use_case.get_rsa()
+        return WrapperFrame(
+            Frame(FrameHeader(data_f['frame']['header']),
+                  FrameBody(data_f['frame']['body'])),
+            {'enc': data_f['enc'], 'ids': data_f['ids']}
+        )
 
-        return rsa.decrypt(data, pv_k)
+    def _decrypt_data(self, uuid: str, data: bytes) -> str:
+
+        return use_case.aes_decrypt(uuid, data)
 
     def _log(self, data_inp: bytes, frame_req: Frame, frame_res: Frame) -> None:
 

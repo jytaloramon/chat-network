@@ -2,6 +2,12 @@ from enum import Enum, unique
 
 
 @unique
+class PreHeaderLabelType(Enum):
+    IDSESSION = 'ids'
+    ENCRYPT = 'enc'
+
+
+@unique
 class HeaderLabelType(Enum):
     RS = 'rs'           # int
     METHOD = 'act'      # int
