@@ -1,4 +1,5 @@
 from enum import Enum, unique
+from http.client import CONFLICT
 
 
 @unique
@@ -12,6 +13,7 @@ class HeaderLabelType(Enum):
     PUBLICKEY = 'apk'   # str
     RSA = 'rsa'         # int
     LASTUPDATE = 'ltu'  # str
+    ERROR = 'err'       # str
 
 
 @unique
@@ -33,16 +35,18 @@ class MethodType(Enum):
 @unique
 class SCodeLabelType(Enum):
     BADCONSTRUCTION = 'FRAME_BAD_CONSTRUCTION'
-    FUNCNOTIMPLEMENTED = 'FUNC_NOT_IMPLEMENTED'
-    SUCCESS = 'SUCESS'
+    FUNCNOTIMPLEMENTED = 'ACTION_NOT_IMPLEMENTED'
     FAILURE = 'FAILURE'
+    CONFLICT = 'CONFLIT'
     UNAUTHORIZED = 'UNAUTHORIZED'
+    SUCCESS = 'SUCESS'
 
 
 @unique
 class SCodeType(Enum):
-    BADCONSTRUCTION = 10
-    FUNCNOTIMPLEMENTED = 11
-    SUCCESS = 20
-    FAILURE = 30
-    UNAUTHORIZED = 31
+    SUCCESS = 10
+    BADCONSTRUCTION = 20
+    FUNCNOTIMPLEMENTED = 21
+    FAILURE = 25
+    CONFLICT = 26
+    UNAUTHORIZED = 27

@@ -111,9 +111,9 @@ def router_message() -> Router:
 
     def push(frame: Frame) -> Frame:
 
-        uuid_user = frame.get_header().get_data()[HeaderLabelType.KEY.value]
-        uuid_chat = frame.get_header().get_data()[
-            HeaderLabelType.ROOMKEY.value]
+        uuid_user = frame.get_header().get_data().get(HeaderLabelType.KEY.value)
+        uuid_chat = frame.get_header().get_data().get(HeaderLabelType.ROOMKEY.value)
+
         text = frame.get_body().get_data()['text']
 
         header_res = FrameHeader()

@@ -77,7 +77,21 @@ class ClientChat:
         resp_h, resp_b = self._data_to_frame(resp)
 
         connection.close()
-        return Frame(FrameHeader(resp_h), FrameBody(resp_b))
+
+        frame_res = Frame(FrameHeader(resp_h), FrameBody(resp_b))
+        status = frame_res.get_header().get_data()[
+            HeaderLabelType.STATUSCODE.value]
+
+        if status in (20, 21, 25, 26, 27):
+            err = frame_res.get_header().get_data()[
+                HeaderLabelType.ERROR.value]
+            print(f'ERROR: {err}')
+
+            input('Pressione enter para sair...')
+
+            return None
+
+        return frame_res
 
     def _data_to_frame(self, data: bytes) -> Tuple[Dict, Dict]:
 
@@ -189,17 +203,21 @@ class ClientChat:
 
     def _init_username(self) -> None:
 
-        self._username = input('Digite seu username: ')
+        while True:
+            self._username = input('Digite seu username: ')
 
-        header = FrameHeader({
-            HeaderLabelType.RS.value: 10,
-            HeaderLabelType.METHOD.value: 11,
-            HeaderLabelType.KEY.value: self._username,
-        })
+            header = FrameHeader({
+                HeaderLabelType.RS.value: 10,
+                HeaderLabelType.METHOD.value: 11,
+                HeaderLabelType.KEY.value: self._username,
+            })
 
-        frame_res = self._send_action(Frame(header, FrameBody()))
-        self._token = frame_res.get_header().get_data()[
-            HeaderLabelType.KEY.value]
+            frame_res = self._send_action(Frame(header, FrameBody()))
+
+            if frame_res is not None:
+                self._token = frame_res.get_header().get_data()[
+                    HeaderLabelType.KEY.value]
+                break
 
     def _menu_create_chat(self) -> None:
 
@@ -210,6 +228,10 @@ class ClientChat:
         })
 
         frame_res = self._send_action(Frame(header, FrameBody()))
+
+        if frame_res is None:
+            return
+
         chat_key = frame_res.get_header().get_data()[
             HeaderLabelType.ROOMKEY.value]
 
@@ -223,6 +245,10 @@ class ClientChat:
         })
 
         frame_res = self._send_action(Frame(header, FrameBody()))
+
+        if frame_res is None:
+            return
+
         chats = frame_res.get_body().get_data()
 
         for i, c in enumerate(chats):
@@ -250,6 +276,9 @@ class ClientChat:
         })
 
         frame_res = self._send_action(Frame(header, FrameBody()))
+
+        if frame_res is None:
+            return
 
         for c in frame_res.get_body().get_data():
             uuid = c['uuid']

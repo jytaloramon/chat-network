@@ -59,6 +59,9 @@ class FrameHeader:
     def set_last_update(self, lu: str):
         self._data[HeaderLabelType.LASTUPDATE.value] = lu
 
+    def set_err(self, err: str):
+        self._data[HeaderLabelType.ERROR.value] = err
+
 
 class FrameBody:
 

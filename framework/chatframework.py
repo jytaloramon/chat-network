@@ -9,6 +9,7 @@ from protocol.protocoltypes import HeaderLabelType, SCodeType
 from framework.router import RouterManager
 from framework.serverthreadpool import ServerThreadPool
 from time import time_ns
+from server.errors import DuplicateError, NotFoundError
 
 from server.routes import use_case
 
@@ -53,17 +54,36 @@ class ChatFramework:
 
         try:
             frame_res: Frame = self._router_manager.solver(frame_req)
-        except BadConstructionError as bc:
+        except BadConstructionError as e:
             header_f = FrameHeader({
                 HeaderLabelType.TIME.value: time_ns(),
                 HeaderLabelType.STATUSCODE.value: SCodeType.BADCONSTRUCTION.value,
+                HeaderLabelType.ERROR.value: e.args[0]
             })
 
             frame_res = Frame(header_f, FrameBody())
-        except FunctionNotImplementedError as fni:
+        except FunctionNotImplementedError as e:
             header_f = FrameHeader({
                 HeaderLabelType.TIME.value: time_ns(),
                 HeaderLabelType.STATUSCODE.value: SCodeType.FUNCNOTIMPLEMENTED.value,
+                HeaderLabelType.ERROR.value: e.args[0]
+            })
+
+            frame_res = Frame(header_f, FrameBody())
+        except NotFoundError as e:
+            header_f = FrameHeader({
+                HeaderLabelType.TIME.value: time_ns(),
+                HeaderLabelType.STATUSCODE.value: SCodeType.FAILURE.value,
+                HeaderLabelType.ERROR.value: e.args[0]
+            })
+
+            frame_res = Frame(header_f, FrameBody())
+
+        except DuplicateError as e:
+            header_f = FrameHeader({
+                HeaderLabelType.TIME.value: time_ns(),
+                HeaderLabelType.STATUSCODE.value: SCodeType.CONFLICT.value,
+                HeaderLabelType.ERROR.value: e.args[0]
             })
 
             frame_res = Frame(header_f, FrameBody())

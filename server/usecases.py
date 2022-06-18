@@ -2,7 +2,7 @@ from time import time_ns
 from typing import List, Tuple
 from uuid import uuid4
 from server.entities import AppEntity, ChatEntity, MessageEntity, UseRegEntity, UserEntity
-from server.errors import NotFoundError
+from server.errors import DuplicateError, NotFoundError
 from rsa import PublicKey, PrivateKey
 
 app = AppEntity()
@@ -22,7 +22,7 @@ class AppUseCases:
         user = app.get_user_by_name(name)
 
         if user is not None:
-            raise Exception('Usuário já existe')
+            raise DuplicateError('Usuário já existe')
 
         user = UserEntity(name)
         uuid = uuid4().__str__()
@@ -38,7 +38,7 @@ class AppUseCases:
         user_reg = app.get_users_reg_by_uuid(uuid_user)
 
         if user_reg is None:
-            raise Exception('Usuário não existe')
+            raise NotFoundError('Usuário não existe')
 
         uuid = uuid4().__str__()
         chat = ChatEntity(uuid, user_reg.get_user())
@@ -51,12 +51,12 @@ class AppUseCases:
         user_reg = app.get_users_reg_by_uuid(uuid_user)
 
         if user_reg is None:
-            raise Exception('Usuário não existe')
+            raise NotFoundError('Usuário não existe')
 
         chat = app.get_chats_by_uuid(uuid_chat)
 
         if chat is None:
-            raise Exception('Chat não existe')
+            raise NotFoundError('Chat não existe')
 
         chat.add_user(user_reg.get_uuid(), user_reg.get_user())
 
@@ -69,12 +69,12 @@ class AppUseCases:
         user_reg = app.get_users_reg_by_uuid(uuid_user)
 
         if user_reg is None:
-            raise Exception('Usuário não existe')
+            raise NotFoundError('Usuário não existe')
 
         chat = app.get_chats_by_uuid(uuid_chat)
 
         if chat is None:
-            raise Exception('Chat não existe')
+            raise NotFoundError('Chat não existe')
 
         if chat.get_user_by_uuid(uuid_user) is None:
             raise Exception('Usuário não faz parte de chat')
@@ -88,14 +88,14 @@ class AppUseCases:
         user_reg = app.get_users_reg_by_uuid(uuid_user)
 
         if user_reg is None:
-            raise Exception('Usuário não existe')
+            raise NotFoundError('Usuário não existe')
 
         chat = app.get_chats_by_uuid(uuid_chat)
 
         if chat is None:
-            raise Exception('Chat não existe')
+            raise NotFoundError('Chat não existe')
 
         if chat.get_user_by_uuid(uuid_user) is None:
-            raise Exception('Usuário não faz parte de chat')
+            raise NotFoundError('Usuário não faz parte de chat')
 
         return chat.get_messages(from_moment)
