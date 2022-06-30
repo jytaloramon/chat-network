@@ -51,7 +51,8 @@ class ChatFramework:
             if encrypt_fram == '' else
             self._data_to_frame(self._decrypt_data(ids, data))
         )
-
+        frame_req.get_header()._data['ids'] = frame_wr.get_data()['ids']
+        
         frame_res: Frame = None
         data_res: bytes = None
 

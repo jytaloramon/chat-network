@@ -258,7 +258,7 @@ class ClientChat:
             HeaderLabelType.KEY.value: self._token,
         })
 
-        frame_res = self._send_action(Frame(header, FrameBody()))
+        frame_res = self._send_action(Frame(header, FrameBody()), self._uuid_session, 'aes')
 
         if frame_res is None:
             return
@@ -275,7 +275,7 @@ class ClientChat:
             HeaderLabelType.METHOD.value: 16,
         })
 
-        frame_res = self._send_action(Frame(header, FrameBody()))
+        frame_res = self._send_action(Frame(header, FrameBody()), self._uuid_session, 'aes')
 
         if frame_res is None:
             return
@@ -306,7 +306,7 @@ class ClientChat:
             HeaderLabelType.ROOMKEY.value: self._chat_current
         })
 
-        frame_res = self._send_action(Frame(header, FrameBody()))
+        frame_res = self._send_action(Frame(header, FrameBody()), self._uuid_session, 'aes')
 
         if frame_res is None:
             return
