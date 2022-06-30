@@ -72,7 +72,6 @@ class RouterManager:
     def solver(self, frame: Frame) -> Tuple[FrameWrapper, bytes]:
 
         hearder = frame.get_header()
-        print(hearder)
         rs = hearder.get_data()[HeaderLabelType.RS.value]
 
         if rs is None:

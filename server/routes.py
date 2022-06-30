@@ -39,11 +39,11 @@ def router_controller(routes_all: List[Router]) -> Router:
         n, e = list(
             map(int, str(header[HeaderLabelType.PUBLICKEY.value]).split(' ')))
 
-        ss_uuid, aes = use_case.new_session()
+        ss_uuid, aes, iv = use_case.new_session()
 
         header_res = FrameHeader()
         header_res.set_status_code(SCodeType.SUCCESS.value)
-        header_res.set_key(' '.join([ss_uuid, aes]))
+        header_res.set_key(' '.join([ss_uuid, aes, iv]))
         frame_res = Frame(header_res, FrameBody())
 
         return build_frame_res('', 'rsa', frame_res, n, e)

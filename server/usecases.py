@@ -17,17 +17,17 @@ class AppUseCases:
     def __init__(self) -> None:
         self.app = AppUseCases.app
 
-    def new_session(self) -> Tuple[str, str]:
+    def new_session(self) -> Tuple[str, str, str]:
 
         session_id = uuid4().__str__()
 
         aes_key = uuid4().__str__()[:32]
-        cipher = AES.new(bytes(aes_key, 'UTF-8'), AES.MODE_CFB)
+        cipher = AES.new(bytes(aes_key, 'UTF-8'), AES.MODE_CFB, b'ramonramonramonr')
         decipher = AES.new(bytes(aes_key, 'UTF-8'), AES.MODE_CFB, cipher.iv)
 
-        self.app.add_aes_key(session_id, cipher, decipher)
+        self.app.add_aes_key(session_id, cipher, decipher, cipher.iv)
 
-        return (session_id, aes_key)
+        return (session_id, aes_key, str(cipher.iv, 'UTF-8'))
 
     def rsa_encrypt(self, n: int, e: int, data: str) -> bytes:
 

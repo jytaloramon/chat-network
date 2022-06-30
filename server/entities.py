@@ -98,11 +98,11 @@ class AppEntity:
         self._chats: Dict[str, ChatEntity] = {}
         self._users: Dict[str, UserEntity] = {}
         self._users_reg: Dict[str, UseRegEntity] = {}
-        self._aes_keys: Dict[str, Tuple[any, any]] = {}
+        self._aes_keys: Dict[str, Tuple[any, any, any]] = {}
 
-    def add_aes_key(self, uuid: str, cipher: any, decipher) -> None:
+    def add_aes_key(self, uuid: str, cipher: any, decipher: any, iv: any) -> None:
 
-        self._aes_keys[uuid] = (cipher, decipher)
+        self._aes_keys[uuid] = (cipher, decipher, iv)
 
     def get_aes_key(self, uuid: str) -> Tuple[any, any]:
 
