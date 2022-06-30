@@ -14,6 +14,9 @@ def build_frame_res(ids: str, enc: str, frame: Frame, n: int = 0, e: int = 0) ->
         'enc': enc,
     })
 
+    if enc == '':
+        return (frame_wr, bytes(frame.__str__(), 'UTF-8'))
+
     if enc == 'rsa':
         return (frame_wr, use_case.rsa_encrypt(n, e, frame.__str__()))
 
@@ -45,16 +48,17 @@ def router_controller(routes_all: List[Router]) -> Router:
 
         return build_frame_res('', 'rsa', frame_res, n, e)
 
-    def pull(frame_req=Frame) -> Frame:
+    def pull(frame_req: Frame) -> Tuple[FrameWrapper, bytes]:
 
         header_res = FrameHeader()
         header_res.set_status_code(SCodeType.SUCCESS.value)
-
-        return Frame(header_res, FrameBody([
+        frame_res = Frame(header_res, FrameBody([
             {'id': r.get_id(), 'label': r.get_label(),
              'methods': list(r.get_methods().keys())}
             for r in routes
         ]))
+
+        return build_frame_res('', '', frame_res)
 
     router.auth(auth)
     router.pull(pull)
