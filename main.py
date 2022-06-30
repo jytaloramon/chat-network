@@ -1,31 +1,46 @@
 from socket import socket
 
-from protocol.frame import Frame, FrameBody, FrameHeader
+from protocol.frame import Frame, FrameBody, FrameHeader, FrameWrapper
 from protocol.protocoltypes import MethodType
+import rsa
+
+pub_k, pv_key = rsa.newkeys(2048)
+
 
 t = socket()
 
 t.connect(('localhost', 7533))
 
+frame_wr = FrameWrapper({
+    'ids': '',
+    'enc': ''
+})
+
 frame = Frame(FrameHeader(
     {
-        'rs': 12,
+        'rs': 1,
         'act': 16,
-        'ltu': 1655408232734985444,
-        'key': '18fcbe28-9f3e-4e85-b79d-f81233cfac2c',
-        'chk': '1b2e8b0b-861e-4c46-9a48-03ade564e501'
+        'apk': str(pub_k.n) + ' ' + str(pub_k.e)
     }),
-    FrameBody({
-        'text': 'ramon'
-    })
+    FrameBody()
 )
 
+print(frame_wr.__str__())
 print(frame.__str__())
 
-t.send(bytes(frame.__str__(), 'UTF-8'))
-d = t.recv(2048)
+t.send(bytes(frame_wr.__str__()+'\t\t'+frame.__str__(), 'UTF-8'))
+d = t.recv(4096)
 t.close()
 print(d)
+
+wr, f = d.split(b'\t\t')
+f_res = rsa.decrypt(f, pv_key)
+
+print('------')
+print(wr)
+print(f_res)
+
+
 
 # Tested
 # - controller = auth, pull
