@@ -5,10 +5,10 @@ from socket import socket
 from threading import Thread
 from time import sleep
 from typing import Dict, Tuple
-from requests import head
 import rsa
-from protocol.frame import Frame, FrameHeader, FrameBody
+from protocol.frame import Frame, FrameHeader, FrameBody, FrameWrapper
 from protocol.protocoltypes import HeaderLabelType
+from Crypto.Cipher import AES
 
 
 class ClientChat:
@@ -29,56 +29,73 @@ class ClientChat:
 
         self._menu_is_visible = False
 
-        frame_info = self._get_server_info_crypt()
+        self._pub_k, self._pv_k = rsa.newkeys(2048)
 
-        # self._pub_k, self._pv_k = rsa.newkeys(
-        #    frame_info.get_header().get_data()[HeaderLabelType.RSA.value])
+        self._aes_cipher = None
+        self._aes_decipher = None
 
-        server_pub_k_str = str(frame_info.get_header().get_data()
-                               [HeaderLabelType.PUBLICKEY.value]).split(' ')
+        frame_info = self._get_session_server()
+        key_session = str(
+            frame_info.get_header().get_data()[HeaderLabelType.KEY.value]).split(' ')
 
-        # self._server_pub_k = rsa.PublicKey(
-        #    int(server_pub_k_str[0]), int(server_pub_k_str[1]))
-
-        # print(self._pub_k, self._pv_k)
-        # print(self._server_pub_k)
+        self._uuid_session = key_session[0]
+        self._aes_key = bytes(key_session[1], 'UTF-8')
+        iv = bytes(key_session[2], 'UTF-8')
+        self._aes_cipher = AES.new(self._aes_key, AES.MODE_CFB, iv)
+        self._aes_decipher = AES.new(
+            self._aes_key, AES.MODE_CFB, iv)
 
         print('----- Chat -----')
         self._init_username()
+        print(f'Session UUID: {self._uuid_session}')
         print(f'Token: {self._token}', end='\n\n')
 
         self._chat()
 
-    def _get_server_info_crypt(self) -> Frame:
+    def _get_session_server(self) -> Frame:
 
         header = FrameHeader({
             HeaderLabelType.RS.value: 1,
             HeaderLabelType.METHOD.value: 11,
+            HeaderLabelType.PUBLICKEY.value: str(
+                self._pub_k.n) + ' ' + str(self._pub_k.e)
         })
 
         return self._send_action(Frame(header, FrameBody()))
 
-    def _send_action(self, frame: Frame, is_encrypted: bool = False) -> Frame:
+    def _send_action(self, frame: Frame, ids: str = '', enc: str = '') -> Frame:
 
         connection = socket()
         connection.connect((self._host, self._port))
 
-        msg = (rsa.encrypt(frame.__str__(), self._server_pub_k)
-               if is_encrypted else frame.__str__())
+        frame_wr = FrameWrapper({'ids': ids, 'enc': enc})
 
-        data_send = bytes(msg, 'utf-8')
+        data_send: bytes = None
+
+        if frame_wr.get_data()['enc'] == '':
+            data_send = bytes(frame_wr.__str__() + '\t\t' +
+                              frame.__str__(), 'UTF-8')
+        else:
+            data_send = bytes(frame_wr.__str__(), 'UTF-8') + b'\t\t' + \
+                self._encrypt_data(bytes(frame.__str__(), 'UTF-8'))
 
         connection.send(data_send)
-        resp = connection.recv(self._len_buffer)
-
-        if is_encrypted:
-            resp = self._decrypt_data(resp)
-
-        resp_h, resp_b = self._data_to_frame(resp)
+        res_wr_data, resp_data = connection.recv(
+            self._len_buffer).split(b'\t\t')
 
         connection.close()
 
-        frame_res = Frame(FrameHeader(resp_h), FrameBody(resp_b))
+        frame_wr_res = self._data_to_frame_wr(res_wr_data)
+        frame_res: Frame = None
+
+        if frame_wr_res.get_data()['enc'] == '':
+            frame_res = self._data_to_frame(resp_data)
+        elif frame_wr_res.get_data()['enc'] == 'rsa':
+            frame_res = self._data_to_frame(
+                self._decrypt_rsa_data(resp_data))
+        else:
+            frame_res = self._data_to_frame(self._decrypt_data(resp_data))
+
         status = frame_res.get_header().get_data()[
             HeaderLabelType.STATUSCODE.value]
 
@@ -93,15 +110,29 @@ class ClientChat:
 
         return frame_res
 
-    def _data_to_frame(self, data: bytes) -> Tuple[Dict, Dict]:
+    def _data_to_frame_wr(self, data: bytes) -> FrameWrapper:
 
         frame = json.loads(data)
 
-        return frame['header'], frame['body']
+        return FrameWrapper(frame)
+
+    def _data_to_frame(self, data: bytes) -> Frame:
+
+        frame = json.loads(data)
+
+        return Frame(FrameHeader(frame['header']), FrameBody(frame['body']))
+
+    def _encrypt_data(self, data: bytes) -> bytes:
+
+        return self._aes_cipher.encrypt(data)
+
+    def _decrypt_rsa_data(self, data: bytes) -> bytes:
+
+        return rsa.decrypt(data, self._pv_k)
 
     def _decrypt_data(self, data: bytes) -> bytes:
 
-        return rsa.decrypt(data, self._pv_k)
+        return self._aes_decipher.decrypt(data)
 
     def _chat(self) -> None:
 
@@ -212,7 +243,7 @@ class ClientChat:
                 HeaderLabelType.KEY.value: self._username,
             })
 
-            frame_res = self._send_action(Frame(header, FrameBody()))
+            frame_res = self._send_action(Frame(header, FrameBody()), self._uuid_session, 'aes')
 
             if frame_res is not None:
                 self._token = frame_res.get_header().get_data()[
