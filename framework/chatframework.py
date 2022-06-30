@@ -1,11 +1,9 @@
 import json
 from socket import socket
-from typing import Dict, Tuple
 
-import rsa
 from framework.error import BadConstructionError, FunctionNotImplementedError
-from protocol.frame import Frame, FrameBody, FrameHeader
-from protocol.protocoltypes import HeaderLabelType, SCodeType
+from protocol.frame import Frame, FrameBody, FrameHeader, FrameWrapper
+from protocol.protocoltypes import HeaderLabelType, SCodeType, WrapperLabelType
 from framework.router import RouterManager
 from framework.serverthreadpool import ServerThreadPool
 from time import time_ns
@@ -18,7 +16,7 @@ class ChatFramework:
 
     def __init__(self, host: str, port: int, router_manager: RouterManager) -> None:
 
-        self._len_buffer = 2048
+        self._len_buffer = 4096
         self._backlog = 50
         self._router_manager = router_manager
 
@@ -42,18 +40,23 @@ class ChatFramework:
 
     def _client_connection(self, client_s: socket, len_buffer: int):
 
-        data_inp = data = client_s.recv(len_buffer)
+        data_wr, data = client_s.recv(len_buffer).split(b'\t\t')
 
-        if not(data[0] == ord('{') and data[-1] == ord('}')):
-            data = self._decrypt_data(data)
+        frame_wr = self._data_wr_to_frame(data_wr)
+        ids = encrypt_fram = frame_wr.get_data()[WrapperLabelType.IDS.value]
+        encrypt_fram = frame_wr.get_data()[WrapperLabelType.ENC.value]
 
-        header, body = self._data_to_frame(data)
-        frame_req = Frame(FrameHeader(header), FrameBody(body))
+        frame_req = (
+            self._data_to_frame(data)
+            if encrypt_fram == '' else
+            self._data_to_frame(self._decrypt_data(ids, data))
+        )
 
         frame_res: Frame = None
+        data_res: bytes = None
 
         try:
-            frame_res: Frame = self._router_manager.solver(frame_req)
+            frame_res_wr, data_res = self._router_manager.solver(frame_req)
         except BadConstructionError as e:
             header_f = FrameHeader({
                 HeaderLabelType.TIME.value: time_ns(),
@@ -88,23 +91,28 @@ class ChatFramework:
 
             frame_res = Frame(header_f, FrameBody())
 
-        client_s.send(bytes(frame_res.__str__(), 'UTF-8'))
+        client_s.send(bytes(frame_res_wr.__str__(),
+                      'UTF-8') + b'\t\t' + data_res)
         client_s.close()
 
-        self._log(data_inp, frame_req, frame_res)
+        self._log(data, frame_req, frame_res)
         self._req_id += 1
 
-    def _data_to_frame(self, data: bytes) -> Tuple[Dict, Dict]:
+    def _data_wr_to_frame(sefl, data: bytes) -> FrameWrapper:
+
+        frame_j = json.loads(data)
+
+        return FrameWrapper(frame_j)
+
+    def _data_to_frame(self, data: bytes) -> Frame:
 
         frame = json.loads(data)
 
-        return frame['header'], frame['body']
+        return Frame(FrameHeader(frame['header']), FrameBody(frame['body']))
 
-    def _decrypt_data(self, data: bytes) -> bytes:
+    def _decrypt_data(self, ids: str, data: bytes) -> bytes:
 
-        _, pv_k = use_case.get_rsa()
-
-        return rsa.decrypt(data, pv_k)
+        return use_case.aes_decrypt(ids, data)
 
     def _log(self, data_inp: bytes, frame_req: Frame, frame_res: Frame) -> None:
 

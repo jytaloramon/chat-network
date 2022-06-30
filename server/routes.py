@@ -1,10 +1,28 @@
-from typing import List
+from typing import List, Tuple
 from framework.router import Router, RouterManager
-from protocol.frame import Frame, FrameBody, FrameHeader
+from protocol.frame import Frame, FrameBody, FrameHeader, FrameWrapper
 from protocol.protocoltypes import HeaderLabelType, SCodeType
 from server.usecases import AppUseCases
 
 use_case = AppUseCases()
+
+
+def build_frame_res(ids: str, enc: str, frame: Frame, n: int = 0, e: int = 0) -> Tuple[FrameWrapper, bytes]:
+
+    frame_wr = FrameWrapper({
+        'ids': ids,
+        'enc': enc,
+    })
+
+    if enc == 'rsa':
+        return (frame_wr, use_case.rsa_encrypt(n, e, frame.__str__()))
+
+    return (frame_wr, use_case.rsa_encrypt(n, e, frame.__str__()))
+
+
+def aes_decrypt(ids: str, data: bytes) -> bytes:
+
+    return use_case.aes_decrypt(ids, data)
 
 
 def router_controller(routes_all: List[Router]) -> Router:
@@ -12,16 +30,20 @@ def router_controller(routes_all: List[Router]) -> Router:
     router = Router('controller')
     routes = [router] + routes_all
 
-    def auth(frame_req=Frame) -> Frame:
+    def auth(frame_req: Frame) -> Tuple[FrameWrapper, bytes]:
 
-        pub_key, _ = use_case.get_rsa()
+        header = frame_req.get_header().get_data()
+        n, e = list(
+            map(int, str(header[HeaderLabelType.PUBLICKEY.value]).split(' ')))
+
+        ss_uuid, aes = use_case.new_session()
 
         header_res = FrameHeader()
         header_res.set_status_code(SCodeType.SUCCESS.value)
-        header_res.set_apk(str(pub_key.n) + ' ' + str(pub_key.e))
-        header_res.set_rsa(2048)
+        header_res.set_key(' '.join([ss_uuid, aes]))
+        frame_res = Frame(header_res, FrameBody())
 
-        return Frame(header_res, FrameBody())
+        return build_frame_res('', 'rsa', frame_res, n, e)
 
     def pull(frame_req=Frame) -> Frame:
 

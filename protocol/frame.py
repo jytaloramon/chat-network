@@ -2,7 +2,7 @@ import json
 from time import time_ns
 from typing import Dict, List
 
-from protocol.protocoltypes import HeaderLabelType
+from protocol.protocoltypes import HeaderLabelType, WrapperLabelType
 
 
 class FrameHeader:
@@ -101,3 +101,25 @@ class Frame:
             'header': header,
             'body':  body
         })
+
+
+class FrameWrapper:
+
+    def __init__(self, data_mapper: Dict[str, any]) -> None:
+
+        self._data: Dict[str, any] = {
+            k.value: data_mapper[k.value] for k in WrapperLabelType}
+
+    def get_data(self) -> Dict[str, any]:
+
+        return self._data
+
+    def set_ids(self, ids: str):
+        self._data[WrapperLabelType.IDS.value] = ids
+
+    def set_enc(self, enc: str):
+        self._data[WrapperLabelType.ENC.value] = enc
+
+    def __str__(self) -> str:
+
+        return json.dumps(self.get_data())

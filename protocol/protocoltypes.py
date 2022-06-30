@@ -3,6 +3,12 @@ from http.client import CONFLICT
 
 
 @unique
+class WrapperLabelType(Enum):
+    IDS = 'ids'  # str
+    ENC = 'enc'  # str
+
+
+@unique
 class HeaderLabelType(Enum):
     RS = 'rs'           # int
     METHOD = 'act'      # int

@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import rsa
 
 
@@ -95,18 +95,18 @@ class AppEntity:
 
     def __init__(self) -> None:
 
-        self._pub_key, self._pv_key = rsa.newkeys(2048)
         self._chats: Dict[str, ChatEntity] = {}
         self._users: Dict[str, UserEntity] = {}
         self._users_reg: Dict[str, UseRegEntity] = {}
+        self._aes_keys: Dict[str, Tuple[any, any]] = {}
 
-    def get_pub_key(self) -> rsa.PublicKey:
+    def add_aes_key(self, uuid: str, cipher: any, decipher) -> None:
 
-        return self._pub_key
+        self._aes_keys[uuid] = (cipher, decipher)
 
-    def get_pv_key(self) -> rsa.PrivateKey:
+    def get_aes_key(self, uuid: str) -> Tuple[any, any]:
 
-        return self._pv_key
+        return self._aes_keys.get(uuid)
 
     def get_chats(self) -> List[ChatEntity]:
 
