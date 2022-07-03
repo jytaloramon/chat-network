@@ -155,7 +155,7 @@ class ClientChat:
                     HeaderLabelType.ROOMKEY.value: self._chat_current,
                 })
 
-                res = self._send_action(Frame(header, FrameBody()))
+                res = self._send_action(Frame(header, FrameBody()), self._uuid_session, 'aes')
 
                 if len(res.get_body().get_data()) > 0:
                     if self._chat_last_update == 0:
@@ -230,7 +230,7 @@ class ClientChat:
                 HeaderLabelType.ROOMKEY.value: self._chat_current,
             })
 
-            self._send_action(Frame(header, FrameBody({'text': data})))
+            self._send_action(Frame(header, FrameBody({'text': data})), self._uuid_session, 'aes')
 
     def _init_username(self) -> None:
 
@@ -243,7 +243,8 @@ class ClientChat:
                 HeaderLabelType.KEY.value: self._username,
             })
 
-            frame_res = self._send_action(Frame(header, FrameBody()), self._uuid_session, 'aes')
+            frame_res = self._send_action(
+                Frame(header, FrameBody()), self._uuid_session, 'aes')
 
             if frame_res is not None:
                 self._token = frame_res.get_header().get_data()[
@@ -258,7 +259,8 @@ class ClientChat:
             HeaderLabelType.KEY.value: self._token,
         })
 
-        frame_res = self._send_action(Frame(header, FrameBody()), self._uuid_session, 'aes')
+        frame_res = self._send_action(
+            Frame(header, FrameBody()), self._uuid_session, 'aes')
 
         if frame_res is None:
             return
@@ -275,7 +277,8 @@ class ClientChat:
             HeaderLabelType.METHOD.value: 16,
         })
 
-        frame_res = self._send_action(Frame(header, FrameBody()), self._uuid_session, 'aes')
+        frame_res = self._send_action(
+            Frame(header, FrameBody()), self._uuid_session, 'aes')
 
         if frame_res is None:
             return
@@ -294,7 +297,12 @@ class ClientChat:
             HeaderLabelType.ROOMKEY.value: chat_key
         })
 
-        frame_res = self._send_action(Frame(header, FrameBody()))
+        frame_res = self._send_action(
+            Frame(header, FrameBody()), self._uuid_session, 'aes')
+
+        if frame_res is None:
+            return
+
         self._chat_current = chat_key
 
     def _menu_info_chat(self) -> None:
@@ -306,7 +314,8 @@ class ClientChat:
             HeaderLabelType.ROOMKEY.value: self._chat_current
         })
 
-        frame_res = self._send_action(Frame(header, FrameBody()), self._uuid_session, 'aes')
+        frame_res = self._send_action(
+            Frame(header, FrameBody()), self._uuid_session, 'aes')
 
         if frame_res is None:
             return
