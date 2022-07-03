@@ -1,7 +1,9 @@
 import json
 from socket import socket
+from typing import Tuple
 
 from framework.error import BadConstructionError, FunctionNotImplementedError
+from framework.logger import Logger
 from protocol.frame import Frame, FrameBody, FrameHeader, FrameWrapper
 from protocol.protocoltypes import HeaderLabelType, SCodeType, WrapperLabelType
 from framework.router import RouterManager
@@ -9,7 +11,7 @@ from framework.serverthreadpool import ServerThreadPool
 from time import time_ns
 from server.errors import DuplicateError, NotFoundError
 
-from server.routes import use_case
+from server.routes import build_frame_res, use_case
 
 
 class ChatFramework:
@@ -42,6 +44,9 @@ class ChatFramework:
 
         data_wr, data = client_s.recv(len_buffer).split(b'\t\t')
 
+        id_request = self._req_id
+        self._req_id += 1
+
         frame_wr = self._data_wr_to_frame(data_wr)
         ids = encrypt_fram = frame_wr.get_data()[WrapperLabelType.IDS.value]
         encrypt_fram = frame_wr.get_data()[WrapperLabelType.ENC.value]
@@ -51,9 +56,14 @@ class ChatFramework:
             if encrypt_fram == '' else
             self._data_to_frame(self._decrypt_data(ids, data))
         )
+
         frame_req.get_header()._data['ids'] = frame_wr.get_data()['ids']
-        
-        frame_res: Frame = None
+        frame_req.get_header()._data['req_id'] = id_request
+
+        logger = Logger()
+        logger.add_req(id_request, data, frame_wr, frame_req)
+
+        frame_res_wr: FrameWrapper = None
         data_res: bytes = None
 
         try:
@@ -65,7 +75,8 @@ class ChatFramework:
                 HeaderLabelType.ERROR.value: e.args[0]
             })
 
-            frame_res = Frame(header_f, FrameBody())
+            frame_res_wr, data_res = self._build_frame_error(
+                Frame(header_f, FrameBody()))
         except FunctionNotImplementedError as e:
             header_f = FrameHeader({
                 HeaderLabelType.TIME.value: time_ns(),
@@ -73,7 +84,11 @@ class ChatFramework:
                 HeaderLabelType.ERROR.value: e.args[0]
             })
 
-            frame_res = Frame(header_f, FrameBody())
+            frame_res_wr, data_res = self._build_frame_error(
+                Frame(header_f, FrameBody()))
+
+            logger.add_res(id_request, data_res, FrameWrapper(
+                {'ids': '', 'enc': ''}), Frame(header_f, FrameBody()))
         except NotFoundError as e:
             header_f = FrameHeader({
                 HeaderLabelType.TIME.value: time_ns(),
@@ -81,7 +96,11 @@ class ChatFramework:
                 HeaderLabelType.ERROR.value: e.args[0]
             })
 
-            frame_res = Frame(header_f, FrameBody())
+            frame_res_wr, data_res = self._build_frame_error(
+                Frame(header_f, FrameBody()))
+
+            logger.add_res(id_request, data_res, FrameWrapper(
+                {'ids': '', 'enc': ''}), Frame(header_f, FrameBody()))
 
         except DuplicateError as e:
             header_f = FrameHeader({
@@ -90,14 +109,17 @@ class ChatFramework:
                 HeaderLabelType.ERROR.value: e.args[0]
             })
 
-            frame_res = Frame(header_f, FrameBody())
+            frame_res_wr, data_res = self._build_frame_error(
+                Frame(header_f, FrameBody()))
+
+            logger.add_res(id_request, data_res, FrameWrapper(
+                {'ids': '', 'enc': ''}), Frame(header_f, FrameBody()))
 
         client_s.send(bytes(frame_res_wr.__str__(),
                       'UTF-8') + b'\t\t' + data_res)
         client_s.close()
 
-        self._log(data, frame_req, frame_res)
-        self._req_id += 1
+        logger.pop_data(id_request)
 
     def _data_wr_to_frame(sefl, data: bytes) -> FrameWrapper:
 
@@ -114,6 +136,10 @@ class ChatFramework:
     def _decrypt_data(self, ids: str, data: bytes) -> bytes:
 
         return use_case.aes_decrypt(ids, data)
+
+    def _build_frame_error(self, frame: Frame) -> Tuple[FrameWrapper, bytes]:
+
+        return build_frame_res('', '', frame)
 
     def _log(self, data_inp: bytes, frame_req: Frame, frame_res: Frame) -> None:
 
